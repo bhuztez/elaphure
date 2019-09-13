@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'elaphure',
-    version = '0.0.1',
+    version = '0.0.2',
 
     url = 'https://github.com/bhuztez/elaphure',
     description = 'a static site generator',
@@ -35,7 +35,7 @@ setup(
           'gh-pages = elaphure.writers.gh_pages:GitHubPagesWriter' ],
     },
     install_requires = ['argh', 'Werkzeug', 'watchdog', 'Mako'],
-    extra_requires = {
+    extras_require = {
         'markdown': ['Markdown'],
         'gh-pages': ['dulwich'],
     }
