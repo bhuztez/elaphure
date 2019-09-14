@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'elaphure',
-    version = '0.0.2',
+    version = '0.0.3',
 
     url = 'https://github.com/bhuztez/elaphure',
     description = 'a static site generator',
