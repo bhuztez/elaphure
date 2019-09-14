@@ -53,6 +53,7 @@ class Config:
 
         self.TEMPLATES = TemplateLookup(
             config.get('TEMPLATE_DIRS', []),
+            input_encoding='utf-8',
             format_exceptions=True,
             cache_enabled=False,
             imports=['from warnings import warn'])
