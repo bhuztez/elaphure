@@ -1,8 +1,9 @@
 import os
 from datetime import datetime
+from watchdog.events import FileSystemEventHandler
 
 
-class Handler:
+class Handler(FileSystemEventHandler):
 
     def __init__(self, queue):
         self.queue = queue
