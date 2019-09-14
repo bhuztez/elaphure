@@ -7,7 +7,7 @@ class Site:
         self.readers = config.READERS
         self.templates = config.TEMPLATES
         self.urls = config.URLS
-        self.database = config.database
+        self.registry = config.registry
         self.source = source
 
     def render(self, filename, context):
@@ -17,10 +17,10 @@ class Site:
         urls = self.urls.bind("localhost", "/")
         for rule in self.urls.iter_rules():
             if rule.arguments:
-                for _, _, _, metadata in self.database.find_all(rule.defaults or {}, rule.arguments or ()):
+                for entry in self.registry.find_all(rule.defaults or {}, rule.arguments or ()):
                     yield urls.build(
                         rule.endpoint,
-                        {a: rule.defaults.get(a, metadata.get(a, None))
+                        {a: rule.defaults.get(a, entry.get(a, None))
                          for a in rule.arguments})
             else:
                 yield urls.build(rule.endpoint)
@@ -29,20 +29,18 @@ class Site:
         urls = self.urls.bind_to_environ(environ)
         try:
             endpoint, values = urls.match()
-            with self.database as db:
-                context = {'db': db, 'urls': urls}
+            with self.registry as registry:
+                context = {'registry': registry, 'urls': urls}
 
                 if values:
-                    result = self.database.find(values)
-                    if not result:
+                    entry = self.registry.find(values)
+                    if not entry:
                         raise NotFound()
 
-                    oid, filename, reader, metadata = result
-                    context['oid'] = oid
-                    context['filename'] = filename
-                    context['metadata'] = metadata
-                    with self.source.open(filename) as f:
-                        context['content'] = self.readers[reader].html(f)
+                    context['filename'] = entry.filename
+                    context['entry'] = entry
+                    with self.source.open(entry.filename) as f:
+                        context['content'] = self.readers[entry.reader].html(f)
 
                 response = Response(self.render(endpoint, context), mimetype='text/html')
         except HTTPException as e:

@@ -33,7 +33,7 @@ class Generator:
     def __init__(self, config, source):
         self.files = config.SOURCE_FILES
         self.readers = config.READERS
-        self.database = config.database
+        self.registry = config.registry
         self.source = source
 
     def add(self, filename):
@@ -42,21 +42,21 @@ class Generator:
                 reader = self.readers[reader_name]
                 with self.source.open(filename) as f:
                     data = reader.metadata(f)
-                self.database.add(filename, reader_name, meta_func(filename, data))
+                self.registry.add(filename, reader_name, meta_func(filename, data))
                 return True
 
     def remove(self, filename):
-        return self.database.remove(filename)
+        return self.registry.remove(filename)
 
     def scan(self):
-        with self.database:
+        with self.registry:
             for filename in self.source.walk():
                 if self.add(filename):
                     _log("info", " * File found %r" % (filename,))
 
     def watch(self):
         for event, src_path, *dest_path in self.source.watch():
-            with self.database:
+            with self.registry:
                 if event == 'created':
                     if self.add(src_path):
                         _log("info", " * File found %r" % (src_path,))

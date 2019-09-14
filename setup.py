@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'elaphure',
-    version = '0.0.3',
+    version = '0.0.4',
 
     url = 'https://github.com/bhuztez/elaphure',
     description = 'a static site generator',
@@ -23,8 +23,11 @@ setup(
     author = 'bhuztez',
     author_email = 'bhuztez@gmail.com',
 
-    packages = ['elaphure', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
+    packages = ['elaphure', 'elaphure.registries', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
     entry_points={
+        'elaphure_registries':
+        [ 'dummy = elaphure.registries.dummy:DummyRegistry',
+          'sqlite = elaphure.registries.sqlite:SqliteRegistry'],
         'elaphure_sources':
         [ 'fs = elaphure.sources.fs:FileSystemSource' ],
         'elaphure_readers':

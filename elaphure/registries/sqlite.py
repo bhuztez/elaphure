@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from . import Entry
 
 def convert_json(s):
     return json.loads(s)
@@ -20,9 +21,9 @@ class JsonGroupArray:
         return "[" + ",".join(self.data) + "]"
 
 
-class Database:
+class SqliteRegistry:
 
-    def __init__(self):
+    def __init__(self, config):
         conn = sqlite3.connect(
             ':memory:',
             check_same_thread=False,
@@ -42,20 +43,13 @@ class Database:
         self.conn = conn
 
     def __enter__(self):
-        return self.conn.__enter__()
+        self.conn.__enter__()
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return self.conn.__exit__(exc_type, exc_value, traceback)
 
-    def find(self, values):
-        condition = ' AND '.join(('json_extract(metadata, ?) = ?' for _ in values))
-        return self.conn.execute(
-            f'''SELECT oid, filename, reader, metadata FROM source WHERE {condition}''',
-            tuple(p
-                  for k, v in values.items()
-                  for p in [f'$.{k}', v])).fetchone()
-
-    def find_all(self, values, args):
+    def _find(self, values, args):
         args = [arg for arg in args if arg not in values]
         condition = ' AND '.join(
             ['json_extract(metadata, ?) = ?' for _ in values] +
@@ -66,7 +60,18 @@ class Database:
             tuple(p
                   for k, v in values.items()
                   for p in [f'$.{k}', v])
-            + tuple(f'$.{k}' for k in args)).fetchall()
+            + tuple(f'$.{k}' for k in args))
+
+    def find(self, values):
+        result = self._find(values, ()).fetchone()
+        if result is not None:
+            oid, filename, reader, metadata = result
+            return Entry(metadata, oid=oid, filename=filename, reader=reader)
+
+    def find_all(self, values, args=()):
+        return [
+            Entry(metadata, oid=oid, filename=filename, reader=reader)
+            for oid, filename, reader, metadata in self._find(values, args).fetchall()]
 
     def add(self, filename, reader, metadata):
         self.conn.execute(

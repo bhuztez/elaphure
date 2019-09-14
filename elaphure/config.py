@@ -4,7 +4,7 @@ from warnings import warn
 from werkzeug.routing import Map, Rule
 from mako.lookup import TemplateLookup
 from pkg_resources import load_entry_point
-from .database import Database
+
 
 class LazyDict:
 
@@ -20,16 +20,13 @@ class LazyDict:
 
 class Config:
 
-    def __init__(self, filename):
+    def __init__(self, filename, registry='default'):
         filename = os.path.abspath(filename)
         mod = ModuleType("__config__")
         mod.__file__ = filename
-        mod.database = Database()
         mod.Map = Map
         mod.Rule = Rule
         mod.warn = warn
-
-        self.database = mod.database
 
         with open(filename, 'r') as f:
             code = compile(f.read(), filename, 'exec')
@@ -37,10 +34,15 @@ class Config:
         config = mod.__dict__
 
         self._config = {
+            'registries': config.get('REGISTRIES', {}),
             'sources': config.get('SOURCES', {}),
             'readers': config.get('READERS', {}),
             'writers': config.get('WRITERS', {}),
         }
+
+        self._config['registries'].setdefault('default', {'name': 'sqlite'})
+        self._config['sources'].setdefault('default', {'name': 'fs'})
+        self._config['writers'].setdefault('default', {'name': 'dry-run'})
 
         self.SOURCES = LazyDict(lambda x: self.load_plugin('sources', x))
         self.READERS = LazyDict(lambda x: self.load_plugin('readers', x))
@@ -58,6 +60,8 @@ class Config:
             cache_enabled=False,
             imports=['from warnings import warn'])
         self.URLS = config.get('URLS', Map([]))
+
+        mod.registry = self.registry = self.load_plugin('registries', registry)
 
     def load_plugin(self, type, name):
         config = self._config[type].get(name, {})

@@ -14,13 +14,13 @@ else:
     configfile = sys.modules['__main__'].__file__
 
 
-def generate(writer='dry-run', config=configfile, source='fs'):
+def build(writer='default', config=configfile, source='default', registry='default'):
     from warnings import catch_warnings
     from werkzeug.test import Client
     from werkzeug.wrappers import BaseResponse
     from contextlib import closing
 
-    cfg = Config(config)
+    cfg = Config(config, registry)
     src = cfg.SOURCES[source]
     static = Static(cfg, src)
     site = Site(cfg, src)
@@ -42,12 +42,12 @@ def generate(writer='dry-run', config=configfile, source='fs'):
                 quit(1)
 
 
-def serve(address="0.0.0.0", port=8000, config=configfile, source='fs'):
+def serve(address="0.0.0.0", port=8000, config=configfile, source='default', registry='default'):
     from werkzeug._reloader import run_with_reloader
     from werkzeug.serving import run_simple
 
     def inner():
-        cfg = Config(config)
+        cfg = Config(config, registry)
         src = cfg.SOURCES[source]
         application = Static(cfg, src)(Site(cfg, src))
         watch(cfg, src)
@@ -56,6 +56,6 @@ def serve(address="0.0.0.0", port=8000, config=configfile, source='fs'):
     run_with_reloader(inner)
 
 parser = argh.ArghParser()
-parser.add_commands([generate, serve])
+parser.add_commands([build, serve])
 parser.dispatch()
 quit()
