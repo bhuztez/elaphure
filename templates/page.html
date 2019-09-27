@@ -1,0 +1,42 @@
+<h1>${entry["title"]}</h1>
+
+${content|n}
+
+<%
+pages = [
+  page
+  for page in registry.find_all({"type": "page"})
+  if entry["slug"] in page.get("tags", [])]
+%>
+% if pages:
+<hr/>
+<h4>Pages tagged with "${entry["title"]}"</h4>
+<ul>
+%   for page in pages:
+<li><a href="${urls.build('page.html', {'slug': page['slug']})}">${page["title"]}</a></li>
+%   endfor
+</ul>
+% endif
+
+<%
+tags = [
+  tag
+  for tag in registry.find_all({"type": "page"})
+  if tag.get("slug", None) in entry["tags"]]
+tag_slugs = [tag["slug"] for tag in tags]
+%>
+
+% if entry["tags"]:
+<hr />
+<p>
+%   for tag in tags:
+<span><a href="${urls.build('page.html', {'slug': tag['slug']})}">${tag["title"]}</a></span>
+%   endfor
+%   for tag in entry["tags"]:
+%     if tag not in tag_slugs:
+<span>${tag}</span>
+<% warn("%s: tag %r not found" % (filename, tag)) %>
+%     endif
+%   endfor
+</p>
+% endif
