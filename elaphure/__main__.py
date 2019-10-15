@@ -18,7 +18,6 @@ def build(writer='default', config=configfile, source='default', registry='defau
     from warnings import catch_warnings
     from werkzeug.test import Client
     from werkzeug.wrappers import BaseResponse
-    from contextlib import closing
 
     cfg = Config(config, registry)
     src = cfg.SOURCES[source]
@@ -30,7 +29,7 @@ def build(writer='default', config=configfile, source='default', registry='defau
     with catch_warnings(record=True) as warnings:
         with cfg.WRITERS[writer] as w:
             for url in site:
-                w.write_file(url, client.get(url).data)
+                w.write_file(url, client.get(url, base_url=w.base_url).data)
 
             for url in static:
                 w.write_file(url, client.get(url).data)

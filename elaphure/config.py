@@ -1,10 +1,10 @@
 import os
 from types import ModuleType
 from warnings import warn
-from werkzeug.routing import Map, Rule
+from werkzeug.routing import Rule
 from mako.lookup import TemplateLookup
 from pkg_resources import load_entry_point
-
+from .urls import Urls
 
 class LazyDict:
 
@@ -24,7 +24,6 @@ class Config:
         filename = os.path.abspath(filename)
         mod = ModuleType("__config__")
         mod.__file__ = filename
-        mod.Map = Map
         mod.Rule = Rule
         mod.warn = warn
 
@@ -59,9 +58,9 @@ class Config:
             format_exceptions=True,
             cache_enabled=False,
             imports=['from warnings import warn'])
-        self.URLS = config.get('URLS', Map([]))
 
         mod.registry = self.registry = self.load_plugin('registries', registry)
+        mod.urls = self.urls = Urls(config.get('URLS', []))
 
     def load_plugin(self, type, name):
         config = self._config[type].get(name, {})

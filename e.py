@@ -14,7 +14,7 @@ def page(filename, meta):
 
 SOURCE_FILES = [("pages/*.md", 'markdown', page)]
 
-URLS = Map([Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page.html')])
+URLS = [Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page.html')]
 
 REGISTRIES = {
   'default': { 'name': 'dummy' }

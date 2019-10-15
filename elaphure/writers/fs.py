@@ -4,6 +4,7 @@ class FileSystemWriter:
 
     def __init__(self, config):
         self.basedir = os.path.abspath(config.get('path', 'output'))
+        self.base_url = config.get('base_url', 'file://.')
 
     def write_file(self, url, content):
         if url.endswith('/'):

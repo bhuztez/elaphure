@@ -1,5 +1,7 @@
 from dulwich.repo import Repo
 from dulwich.objects import Blob, Tree, Commit
+from dulwich.client import get_transport_and_path
+from urllib.parse import urlparse, urlsplit
 from pathlib import PurePath
 
 class GitHubPagesWriter:
@@ -7,7 +9,26 @@ class GitHubPagesWriter:
     def __init__(self, config):
         self.repo = Repo(config.get('repo', '.'))
         self.branch = config.get('branch', 'gh-pages')
+        self.remote = config.get('remote', 'origin')
         self.tree = {}
+
+    @property
+    def base_url(self):
+        config = self.repo.get_config()
+        url = config.get((b'remote', self.remote.encode()), b'url')
+        client, path = get_transport_and_path(url.decode())
+        url = client.get_url(path)
+        o = urlparse(url)
+        assert o.hostname == 'github.com'
+        path = o.path[1:]
+        if path.endswith(".git"):
+            path = path[:-4]
+
+        user, repo = path.split('/')
+        if repo == f'{user}.github.io':
+            return f'https://{user}.github.io'
+        else:
+            return f'https://{user}.github.io/{repo}'
 
     def write_file(self, url, content):
         segs = PurePath(url).parts[1:]
@@ -24,9 +45,9 @@ class GitHubPagesWriter:
         self.repo.object_store.add_object(blob)
         tree[segs[-1]] = blob.id
 
-    def write_tree(self, tree):
+    def write_tree(self, files):
         tree = Tree()
-        for name, value in tree.items():
+        for name, value in files.items():
             if isinstance(value, dict):
                 tree.add(name.encode('utf-8'), 0o040000, self.write_tree(value))
             else:
