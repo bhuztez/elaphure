@@ -1,9 +1,8 @@
 import os
 import sys
 import argh
-from argh import arg
 
-from .config import Config
+from .config import load_config
 from .static import Static
 from .site import Site
 from .generator import scan, watch
@@ -19,8 +18,8 @@ def build(writer='default', config=configfile, source='default', registry='defau
     from werkzeug.test import Client
     from werkzeug.wrappers import BaseResponse
 
-    cfg = Config(config, registry)
-    src = cfg.SOURCES[source]
+    cfg = load_config(config, registry)
+    src = cfg.sources[source]
     static = Static(cfg, src)
     site = Site(cfg, src)
     scan(cfg, src)
@@ -46,8 +45,8 @@ def serve(address="0.0.0.0", port=8000, config=configfile, source='default', reg
     from werkzeug.serving import run_simple
 
     def inner():
-        cfg = Config(config, registry)
-        src = cfg.SOURCES[source]
+        cfg = load_config(config, registry)
+        src = cfg.sources[source]
         application = Static(cfg, src)(Site(cfg, src))
         watch(cfg, src)
         run_simple(address, port, application, use_debugger=True)

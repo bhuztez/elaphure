@@ -17,12 +17,16 @@ def metalines(f):
 
 class MarkdownReader:
 
-    def __init__(self, config):
+    def __init__(self, *,
+                 extensions=['meta'],
+                 extension_configs={},
+                 output_format='html5',
+                 tab_length=4):
         self.md = Markdown(
-            extensions=config.get('extensions', ['meta']),
-            extension_configs=config.get('extension_configs', {}),
-            output_format=config.get("output_format", "html5"),
-            tab_length=config.get("tab_length", 4))
+            extensions=extensions,
+            extension_configs=extension_configs,
+            output_format=output_format,
+            tab_length=tab_length)
 
     def metadata(self, f):
         md = self.md

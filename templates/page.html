@@ -1,6 +1,14 @@
+<%
+from werkzeug.exceptions import NotFound
+entries = registry.find_all(values)
+if not entries:
+  raise NotFound()
+entry = entries[0]
+%>
+
 <h1>${entry["title"]}</h1>
 
-${content|n}
+${read(entry).html()|n}
 
 <%
 pages = [
@@ -13,7 +21,7 @@ pages = [
 <h4>Pages tagged with "${entry["title"]}"</h4>
 <ul>
 %   for page in pages:
-<li><a href="${urls.build('page.html', {'slug': page['slug']})}">${page["title"]}</a></li>
+<li><a href="${urls.build('page', {'slug': page['slug']})}">${page["title"]}</a></li>
 %   endfor
 </ul>
 % endif
@@ -30,7 +38,7 @@ tag_slugs = [tag["slug"] for tag in tags]
 <hr />
 <p>
 %   for tag in tags:
-<span><a href="${urls.build('page.html', {'slug': tag['slug']})}">${tag["title"]}</a></span>
+<span><a href="${urls.build('page', {'slug': tag['slug']})}">${tag["title"]}</a></span>
 %   endfor
 %   for tag in entry["tags"]:
 %     if tag not in tag_slugs:

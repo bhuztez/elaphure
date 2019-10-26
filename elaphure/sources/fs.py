@@ -28,8 +28,8 @@ class Handler(FileSystemEventHandler):
 
 class FileSystemSource:
 
-    def __init__(self, config):
-        self.basedir = os.path.abspath(config.get('basedir', '.'))
+    def __init__(self, basedir='.'):
+        self.basedir = os.path.abspath(basedir)
 
     def walk(self, base=''):
         base = os.path.join(self.basedir, base)

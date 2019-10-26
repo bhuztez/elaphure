@@ -2,9 +2,9 @@ import os
 
 class FileSystemWriter:
 
-    def __init__(self, config):
-        self.basedir = os.path.abspath(config.get('path', 'output'))
-        self.base_url = config.get('base_url', 'file://.')
+    def __init__(self, *, path='output', base_url='file://.'):
+        self.basedir = os.path.abspath(path)
+        self.base_url = base_url
 
     def write_file(self, url, content):
         if url.endswith('/'):

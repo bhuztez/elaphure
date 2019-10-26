@@ -1,17 +1,26 @@
 from werkzeug.wrappers import Response
-from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.exceptions import HTTPException
+
+
+class Reader:
+
+    def __init__(self, source, filename, reader):
+        self.source = source
+        self.filename = filename
+        self.reader = reader
+
+    def html(self):
+        with self.source.open(self.filename) as f:
+            return self.reader.html(f)
 
 class Site:
 
     def __init__(self, config, source):
-        self.readers = config.READERS
-        self.templates = config.TEMPLATES
+        self.readers = config.readers
+        self.views = config.views
         self.urls = config.urls
         self.registry = config.registry
         self.source = source
-
-    def render(self, filename, context):
-        return self.templates.get_template(filename).render(**context)
 
     def __iter__(self):
         for rule in self.urls.iter_rules():
@@ -27,24 +36,15 @@ class Site:
             else:
                 yield self.urls.build(rule.endpoint)
 
+    def read(self, entry):
+        return Reader(self.source, entry.filename, self.readers[entry.reader])
+
     def __call__(self, environ, start_response):
         with self.urls.bind_to_environ(environ):
             try:
                 endpoint, values = self.urls.match()
-                with self.registry as registry:
-                    context = {'registry': registry, 'urls': self.urls}
-
-                    if values:
-                        entry = self.registry.find(values)
-                        if not entry:
-                            raise NotFound()
-
-                        context['filename'] = entry.filename
-                        context['entry'] = entry
-                        with self.source.open(entry.filename) as f:
-                            context['content'] = self.readers[entry.reader].html(f)
-
-                    response = Response(self.render(endpoint, context), mimetype='text/html')
+                with self.registry:
+                    response = self.views[endpoint](self.registry, self.urls, self.read, values)
             except HTTPException as e:
                 response = e
             return response(environ, start_response)

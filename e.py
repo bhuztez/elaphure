@@ -3,8 +3,6 @@
 if __name__ == '__main__':
     import elaphure.__main__
 
-TEMPLATE_DIRS = ['templates']
-
 def page(filename, meta):
     slug = filename[6:-3]
     return {"type": "page",
@@ -14,8 +12,13 @@ def page(filename, meta):
 
 SOURCE_FILES = [("pages/*.md", 'markdown', page)]
 
-URLS = [Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page.html')]
+URLS = [Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page')]
 
-REGISTRIES = {
-  'default': { 'name': 'dummy' }
-}
+class registries(config):
+    default = DummyRegistry()
+
+class HTMLView(MakoView):
+    template_dirs = ['templates']
+
+class views(config):
+    page = HTMLView('page.html')

@@ -23,7 +23,7 @@ class JsonGroupArray:
 
 class SqliteRegistry:
 
-    def __init__(self, config):
+    def __init__(self):
         conn = sqlite3.connect(
             ':memory:',
             check_same_thread=False,
@@ -44,7 +44,6 @@ class SqliteRegistry:
 
     def __enter__(self):
         self.conn.__enter__()
-        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return self.conn.__exit__(exc_type, exc_value, traceback)
@@ -61,12 +60,6 @@ class SqliteRegistry:
                   for k, v in values.items()
                   for p in [f'$.{k}', v])
             + tuple(f'$.{k}' for k in args))
-
-    def find(self, values):
-        result = self._find(values, ()).fetchone()
-        if result is not None:
-            oid, filename, reader, metadata = result
-            return Entry(metadata, oid=oid, filename=filename, reader=reader)
 
     def find_all(self, values, args=()):
         return [

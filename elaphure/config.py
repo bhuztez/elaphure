@@ -2,68 +2,113 @@ import os
 from types import ModuleType
 from warnings import warn
 from werkzeug.routing import Rule
-from mako.lookup import TemplateLookup
-from pkg_resources import load_entry_point
+from pkg_resources import load_entry_point, get_entry_info
 from .urls import Urls
 
-class LazyDict:
+
+class LazyDescriptor:
 
     def __init__(self, func):
-        self.data = {}
         self.func = func
+        self.name = None
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        value = self.func(instance)
+        setattr(instance, self.name, value)
+        return value
+
+class LazyMeta(type):
+
+    def __new__(self, name, bases, kwds, *, info=None):
+        if not bases:
+            return type.__new__(self, name, bases, {"info": info})
+
+        return type(
+            name,
+            tuple(base.wrapped if isinstance(base, LazyMeta) else base
+                  for base in bases),
+            kwds)
+
+    @LazyDescriptor
+    def wrapped(self):
+        return self.info.load()
+
+    def __call__(self, *args, **kwargs):
+        return LazyDescriptor(lambda self: self.wrapped(*args, **kwargs))
+
+
+class Builtins:
 
     def __getitem__(self, key):
-        if key not in self.data:
-            self.data[key] = self.func(key)
-        return self.data[key]
+        if key in __builtins__:
+            return __builtins__[key]
+        info = get_entry_info(__package__, f'{__package__}_extensions', key)
+        if info is None:
+            raise KeyError(key)
+
+        class LazyClass(metaclass=LazyMeta, info=info):
+            pass
+
+        return LazyClass
 
 
-class Config:
+class Meta(type):
 
-    def __init__(self, filename, registry='default'):
-        filename = os.path.abspath(filename)
-        mod = ModuleType("__config__")
-        mod.__file__ = filename
-        mod.Rule = Rule
-        mod.warn = warn
+    def __getattr__(self, key):
+        try:
+            return load_entry_point(__package__, f'{__package__}_{self.__name__}', key)()
+        except ImportError:
+            raise AttributeError(key)
 
-        with open(filename, 'r') as f:
-            code = compile(f.read(), filename, 'exec')
-        exec(code, mod.__dict__)
-        config = mod.__dict__
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key.replace('-', '_'))
+        except AttributeError:
+            raise KeyError(key)
 
-        self._config = {
-            'registries': config.get('REGISTRIES', {}),
-            'sources': config.get('SOURCES', {}),
-            'readers': config.get('READERS', {}),
-            'writers': config.get('WRITERS', {}),
-        }
+class ConfigDict(metaclass=Meta):
+    pass
 
-        self._config['registries'].setdefault('default', {'name': 'sqlite'})
-        self._config['sources'].setdefault('default', {'name': 'fs'})
-        self._config['writers'].setdefault('default', {'name': 'dry-run'})
+class registries(ConfigDict):
+    pass
 
-        self.SOURCES = LazyDict(lambda x: self.load_plugin('sources', x))
-        self.READERS = LazyDict(lambda x: self.load_plugin('readers', x))
-        self.WRITERS = LazyDict(lambda x: self.load_plugin('writers', x))
+class sources(ConfigDict):
+    pass
 
-        self.SOURCE_FILES = config.get('SOURCE_FILES', [])
+class readers(ConfigDict):
+    pass
 
-        self.STATICFILES_DIRS = config.get('STATICFILES_DIRS', {})
-        self.STATICFILES_EXCLUDE = config.get('STATICFILES_EXCLUDE', [])
+class writers(ConfigDict):
+    pass
 
-        self.TEMPLATES = TemplateLookup(
-            config.get('TEMPLATE_DIRS', []),
-            input_encoding='utf-8',
-            format_exceptions=True,
-            cache_enabled=False,
-            imports=['from warnings import warn'])
 
-        mod.registry = self.registry = self.load_plugin('registries', registry)
-        mod.urls = self.urls = Urls(config.get('URLS', []))
+def load_config(filename, registry='default'):
+    filename = os.path.abspath(filename)
+    mod = ModuleType("__config__")
+    mod.__builtins__ = Builtins()
+    mod.__file__ = filename
+    mod.Rule = Rule
+    mod.warn = warn
+    mod.config = ConfigDict
 
-    def load_plugin(self, type, name):
-        config = self._config[type].get(name, {})
-        klass = load_entry_point(
-            __package__, f'{__package__}_{type}', config.get('name', name))
-        return klass(config)
+    with open(filename, 'r') as f:
+        code = compile(f.read(), filename, 'exec')
+    exec(code, mod.__dict__)
+    config = mod.__dict__
+
+    config.setdefault('registries', registries)
+    config.setdefault('sources', sources)
+    config.setdefault('readers', readers)
+    config.setdefault('writers', writers)
+
+    config.setdefault('SOURCE_FILES', [])
+    config.setdefault('STATICFILES_DIRS', {})
+    config.setdefault('STATICFILES_EXCLUDE', [])
+    config.setdefault("URLS", [])
+
+    mod.registry = mod.registries[registry]
+    mod.urls = Urls(mod.URLS)
+    return mod

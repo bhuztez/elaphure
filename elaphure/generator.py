@@ -32,7 +32,7 @@ class Generator:
 
     def __init__(self, config, source):
         self.files = config.SOURCE_FILES
-        self.readers = config.READERS
+        self.readers = config.readers
         self.registry = config.registry
         self.source = source
 

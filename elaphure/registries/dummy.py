@@ -3,13 +3,12 @@ from . import Entry
 
 class DummyRegistry:
 
-    def __init__(self, config):
+    def __init__(self):
         self._entries = {}
         self._lock = Lock()
 
     def __enter__(self):
         self._lock.acquire()
-        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._lock.release()
@@ -23,12 +22,6 @@ class DummyRegistry:
             if not all((k in entry) for k in args):
                 continue
             yield entry
-
-    def find(self, values):
-        try:
-            return next(self.iter(values))
-        except StopIteration:
-            pass
 
     def find_all(self, values, args=()):
         return list(self.iter(values, args))

@@ -1,6 +1,6 @@
 class DryRunWriter:
 
-    def __init__(self, config):
+    def __init__(self):
         self.base_url = 'http://example.com'
 
     def write_file(self, url, content):

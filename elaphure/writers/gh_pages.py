@@ -6,10 +6,10 @@ from pathlib import PurePath
 
 class GitHubPagesWriter:
 
-    def __init__(self, config):
-        self.repo = Repo(config.get('repo', '.'))
-        self.branch = config.get('branch', 'gh-pages')
-        self.remote = config.get('remote', 'origin')
+    def __init__(self, *, repo='.', branch='gh-pages', remote='origin'):
+        self.repo = Repo(repo)
+        self.branch = branch
+        self.remote = remote
         self.tree = {}
 
     @property
