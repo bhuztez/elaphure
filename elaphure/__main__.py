@@ -26,7 +26,7 @@ def build(writer='default', config=configfile, source='default', registry='defau
     client = Client(static(site), BaseResponse)
 
     with catch_warnings(record=True) as warnings:
-        with cfg.WRITERS[writer] as w:
+        with cfg.writers[writer] as w:
             for url in site:
                 w.write_file(url, client.get(url, base_url=w.base_url).data)
 

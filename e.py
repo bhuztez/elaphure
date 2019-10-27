@@ -17,8 +17,5 @@ URLS = [Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page')]
 class registries(config):
     default = DummyRegistry()
 
-class HTMLView(MakoView):
-    template_dirs = ['templates']
-
 class views(config):
-    page = HTMLView('page.html')
+    page = WheezyView('templates/page.html')

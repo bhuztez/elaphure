@@ -29,7 +29,7 @@ setup(
         [ 'DummyRegistry = elaphure.registries.dummy:DummyRegistry',
           'SqliteRegistry = elaphure.registries.sqlite:SqliteRegistry',
           'FileSystemSource = elaphure.sources.fs:FileSystemSource',
-          'MakoView = elaphure.views.mako:MakoView',
+          'WheezyView = elaphure.views.wheezy:WheezyView',
           'MarkdownReader = elaphure.readers.markdown:MarkdownReader',
           'DryRunWriter = elaphure.writers.dry_run:DryRunWriter',
           'FileSystemWriter = elaphure.writers.fs:FileSystemWriter',
@@ -56,7 +56,7 @@ setup(
     },
     install_requires = ['argh', 'Werkzeug', 'watchdog'],
     extras_require = {
-        'mako': ['Mako'],
+        'wheezy.template': ['wheezy_template'],
         'markdown': ['Markdown'],
         'gh-pages': ['dulwich'],
     }

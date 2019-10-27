@@ -6,8 +6,7 @@ from pkg_resources import load_entry_point, get_entry_info
 from .urls import Urls
 
 
-class LazyDescriptor:
-
+class cached_property:
     def __init__(self, func):
         self.func = func
         self.name = None
@@ -18,6 +17,20 @@ class LazyDescriptor:
     def __get__(self, instance, owner):
         value = self.func(instance)
         setattr(instance, self.name, value)
+        return value
+
+class LazyDescriptor:
+
+    def __init__(self, func):
+        self.func = func
+        self.name = None
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        value = self.func(owner)
+        setattr(owner, self.name, value)
         return value
 
 class LazyMeta(type):
@@ -32,28 +45,24 @@ class LazyMeta(type):
                   for base in bases),
             kwds)
 
-    @LazyDescriptor
+    @cached_property
     def wrapped(self):
         return self.info.load()
 
     def __call__(self, *args, **kwargs):
-        return LazyDescriptor(lambda self: self.wrapped(*args, **kwargs))
+        return LazyDescriptor(lambda _: self.wrapped(*args, **kwargs))
 
 
-class Builtins:
+class Builtins(dict):
 
     def __getitem__(self, key):
-        if key in __builtins__:
-            return __builtins__[key]
-        info = get_entry_info(__package__, f'{__package__}_extensions', key)
-        if info is None:
-            raise KeyError(key)
-
-        class LazyClass(metaclass=LazyMeta, info=info):
-            pass
-
-        return LazyClass
-
+        if key not in self:
+            info = get_entry_info(__package__, f'{__package__}_extensions', key)
+            if info is not None:
+                class LazyClass(metaclass=LazyMeta, info=info):
+                    pass
+                self[key] = LazyClass
+        return super().__getitem__(key)
 
 class Meta(type):
 
@@ -88,7 +97,7 @@ class writers(ConfigDict):
 def load_config(filename, registry='default'):
     filename = os.path.abspath(filename)
     mod = ModuleType("__config__")
-    mod.__builtins__ = Builtins()
+    mod.__builtins__ = Builtins(__builtins__)
     mod.__file__ = filename
     mod.Rule = Rule
     mod.warn = warn
@@ -96,6 +105,7 @@ def load_config(filename, registry='default'):
 
     with open(filename, 'r') as f:
         code = compile(f.read(), filename, 'exec')
+
     exec(code, mod.__dict__)
     config = mod.__dict__
 
