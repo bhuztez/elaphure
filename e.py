@@ -14,8 +14,5 @@ SOURCE_FILES = [("pages/*.md", 'markdown', page)]
 
 URLS = [Rule('/<slug>.html', defaults={'type': 'page'}, endpoint='page')]
 
-class registries(config):
-    default = DummyRegistry()
-
 class views(config):
     page = WheezyView('templates/page.html')

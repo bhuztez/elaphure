@@ -13,16 +13,15 @@ else:
     configfile = sys.modules['__main__'].__file__
 
 
-def build(writer='default', config=configfile, source='default', registry='default'):
+def build(writer='default', config=configfile, source='default'):
     from warnings import catch_warnings
     from werkzeug.test import Client
     from werkzeug.wrappers import BaseResponse
 
-    cfg = load_config(config, registry)
-    src = cfg.sources[source]
-    static = Static(cfg, src)
-    site = Site(cfg, src)
-    scan(cfg, src)
+    cfg = load_config(config, source)
+    static = Static(cfg)
+    site = Site(cfg)
+    scan(cfg)
     client = Client(static(site), BaseResponse)
 
     with catch_warnings(record=True) as warnings:
@@ -40,15 +39,15 @@ def build(writer='default', config=configfile, source='default', registry='defau
                 quit(1)
 
 
-def serve(address="0.0.0.0", port=8000, config=configfile, source='default', registry='default'):
+def serve(address="0.0.0.0", port=8000, config=configfile, source='default'):
     from werkzeug._reloader import run_with_reloader
     from werkzeug.serving import run_simple
+    from threading import Thread
 
     def inner():
-        cfg = load_config(config, registry)
-        src = cfg.sources[source]
-        application = Static(cfg, src)(Site(cfg, src))
-        watch(cfg, src)
+        cfg = load_config(config, source)
+        application = Static(cfg)(Site(cfg))
+        Thread(target=lambda: watch(cfg), daemon=True).start()
         run_simple(address, port, application, use_debugger=True)
 
     run_with_reloader(inner)

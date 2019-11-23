@@ -1,23 +1,13 @@
+import sys
 import os
 from types import ModuleType
 from warnings import warn
 from werkzeug.routing import Rule
 from pkg_resources import load_entry_point, get_entry_info
 from .urls import Urls
+from .utils import cached_property
+from .database import Database
 
-
-class cached_property:
-    def __init__(self, func):
-        self.func = func
-        self.name = None
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-    def __get__(self, instance, owner):
-        value = self.func(instance)
-        setattr(instance, self.name, value)
-        return value
 
 class LazyDescriptor:
 
@@ -81,9 +71,6 @@ class Meta(type):
 class ConfigDict(metaclass=Meta):
     pass
 
-class registries(ConfigDict):
-    pass
-
 class sources(ConfigDict):
     pass
 
@@ -94,14 +81,17 @@ class writers(ConfigDict):
     pass
 
 
-def load_config(filename, registry='default'):
+def load_config(filename, source='default'):
     filename = os.path.abspath(filename)
-    mod = ModuleType("__config__")
+    mod = ModuleType('__config__')
+    sys.modules['__config__'] = mod
+
     mod.__builtins__ = Builtins(__builtins__)
     mod.__file__ = filename
     mod.Rule = Rule
     mod.warn = warn
     mod.config = ConfigDict
+    mod.db = Database(mod)
 
     with open(filename, 'r') as f:
         code = compile(f.read(), filename, 'exec')
@@ -109,7 +99,6 @@ def load_config(filename, registry='default'):
     exec(code, mod.__dict__)
     config = mod.__dict__
 
-    config.setdefault('registries', registries)
     config.setdefault('sources', sources)
     config.setdefault('readers', readers)
     config.setdefault('writers', writers)
@@ -119,6 +108,6 @@ def load_config(filename, registry='default'):
     config.setdefault('STATICFILES_EXCLUDE', [])
     config.setdefault("URLS", [])
 
-    mod.registry = mod.registries[registry]
+    mod.source = mod.sources[source]
     mod.urls = Urls(mod.URLS)
     return mod

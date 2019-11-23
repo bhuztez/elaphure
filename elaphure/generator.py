@@ -27,54 +27,35 @@ def match(filename, pathname):
         return False
     return fnmatch(filename, basename)
 
+def add(config, filename):
+    for pattern, reader_name, meta_func in config.SOURCE_FILES:
+        if match(filename, pattern):
+            reader = config.readers[reader_name]
+            with config.source.open(filename) as f:
+                data = reader.metadata(f)
+            config.db.add(filename, reader_name, meta_func(filename, data))
+            return True
 
-class Generator:
+def scan(config):
+    with config.db:
+        for filename in config.source.walk():
+            if add(config, filename):
+                _log("info", f" * File found {filename!r}")
 
-    def __init__(self, config, source):
-        self.files = config.SOURCE_FILES
-        self.readers = config.readers
-        self.registry = config.registry
-        self.source = source
-
-    def add(self, filename):
-        for pattern, reader_name, meta_func in self.files:
-            if match(filename, pattern):
-                reader = self.readers[reader_name]
-                with self.source.open(filename) as f:
-                    data = reader.metadata(f)
-                self.registry.add(filename, reader_name, meta_func(filename, data))
-                return True
-
-    def remove(self, filename):
-        return self.registry.remove(filename)
-
-    def scan(self):
-        with self.registry:
-            for filename in self.source.walk():
-                if self.add(filename):
-                    _log("info", " * File found %r" % (filename,))
-
-    def watch(self):
-        for event, src_path, *dest_path in self.source.watch():
-            with self.registry:
-                if event == 'created':
-                    if self.add(src_path):
-                        _log("info", " * File found %r" % (src_path,))
-                elif event == 'modified':
-                    if self.add(src_path):
-                        _log("info", " * File modified %r" % (src_path,))
-                elif event == 'deleted':
-                    if self.remove(src_path):
-                        _log("info", " * File deleted %r" % (src_path,))
-                elif event == 'moved':
-                    remove = self.remove(src_path)
-                    add = self.add(dest_path[0])
-                    if remove or add:
-                        _log("info", " * File moved from %r to %r" % (src_path, dest_path))
-
-def scan(config, src):
-    Generator(config, src).scan()
-
-def watch(config, src):
-    from threading import Thread
-    Thread(target=Generator(config, src).watch, daemon=True).start()
+def watch(config):
+    for event, src_path, *dest_path in config.source.watch():
+        with config.db:
+            if event == 'created':
+                if add(config, src_path):
+                    _log("info", f" * File found {src_path!r}")
+            elif event == 'modified':
+                if add(config, src_path):
+                    _log("info", f" * File modified {src_path!r}")
+            elif event == 'deleted':
+                if config.db.remove(src_path):
+                    _log("info", f" * File deleted {src_path!r}")
+            elif event == 'moved':
+                removed = config.db.remove(src_path)
+                added = add(config, dest_path[0])
+                if removed or added:
+                    _log("info", f" * File moved from {src_path!r} to {dest_path!r}")

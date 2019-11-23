@@ -29,7 +29,7 @@ class WheezyView:
             extensions=[
                 CoreExtension(token_start=self.token_start),
                 CodeExtension(token_start=self.token_start),
-                AutoRequireExtension('urls', 'registry', 'values', 'read', 'entries')
+                AutoRequireExtension('urls', 'db', 'endpoint', 'values', 'entries')
             ])
 
         with catch_warnings(record=True):
@@ -43,7 +43,7 @@ class WheezyView:
     def render(self, **context):
         return self.engine.get_template(self.template_name).render(context)
 
-    def __call__(self, registry, urls, read, values, entries):
+    def __call__(self, db, urls, endpoint, values, entries):
         return Response(
-            self.render(registry=registry, urls=urls, read=read, values=values, entries=entries),
+            self.render(db=db, urls=urls, endpoint=endpoint, values=values, entries=entries),
             mimetype=self.mimetype)

@@ -26,9 +26,7 @@ setup(
     packages = ['elaphure', 'elaphure.registries', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
     entry_points={
         'elaphure_extensions':
-        [ 'DummyRegistry = elaphure.registries.dummy:DummyRegistry',
-          'SqliteRegistry = elaphure.registries.sqlite:SqliteRegistry',
-          'FileSystemSource = elaphure.sources.fs:FileSystemSource',
+        [ 'FileSystemSource = elaphure.sources.fs:FileSystemSource',
           'WheezyView = elaphure.views.wheezy:WheezyView',
           'MarkdownReader = elaphure.readers.markdown:MarkdownReader',
           'DryRunWriter = elaphure.writers.dry_run:DryRunWriter',

@@ -14,6 +14,13 @@ def metalines(f):
         if line.strip() == '' or END_RE.match(line):
             break
 
+class Content(str):
+
+    def __new__(self, html, attrs):
+        return str.__new__(self, html)
+
+    def __init__(self, html, attrs):
+        self.__dict__.update(attrs)
 
 class MarkdownReader:
 
@@ -21,12 +28,14 @@ class MarkdownReader:
                  extensions=['meta'],
                  extension_configs={},
                  output_format='html5',
-                 tab_length=4):
+                 tab_length=4,
+                 attrs=()):
         self.md = Markdown(
             extensions=extensions,
             extension_configs=extension_configs,
             output_format=output_format,
             tab_length=tab_length)
+        self.attrs = attrs
 
     def metadata(self, f):
         md = self.md
@@ -36,7 +45,9 @@ class MarkdownReader:
         lines = MetaPreprocessor(md).run(lines)
         return md.Meta
 
-    def html(self, f):
+    def content(self, f):
         md = self.md
         md.reset()
-        return md.convert(f.read())
+        html=md.convert(f.read())
+        attrs = {a: getattr(md,a) for a in self.attrs}
+        return Content(html, attrs)

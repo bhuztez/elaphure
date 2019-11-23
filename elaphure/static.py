@@ -6,10 +6,10 @@ from werkzeug.wsgi import SharedDataMiddleware
 
 class Static:
 
-    def __init__(self, config, source):
+    def __init__(self, config):
         self.dirs = config.STATICFILES_DIRS
         self.exclude = config.STATICFILES_EXCLUDE
-        self.source = source
+        self.source = config.source
 
     def is_allowed(self, path):
         return not any(

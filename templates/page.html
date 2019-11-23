@@ -6,12 +6,12 @@ entry = entries[0]
 
 <h1>%entry["title"]</h1>
 
-%read(entry).html()
+%entry.content
 
 %(
 pages = [
   page
-  for page in registry.select({"type": "page"})
+  for page in db.select({"type": "page"})
   if entry["slug"] in page.get("tags", [])]
 )
 %if pages:
@@ -27,7 +27,7 @@ pages = [
 %(
 tags = [
   tag
-  for tag in registry.select({"type": "page"})
+  for tag in db.select({"type": "page"})
   if tag.get("slug", None) in entry["tags"]]
 tag_slugs = [tag["slug"] for tag in tags]
 )
