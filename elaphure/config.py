@@ -3,11 +3,23 @@ import os
 from types import ModuleType
 from warnings import warn
 from werkzeug.routing import Rule
+from werkzeug.wsgi import responder
 from pkg_resources import load_entry_point, get_entry_info
 from .urls import Urls
-from .utils import cached_property
 from .database import Database
 
+class cached_property:
+    def __init__(self, func):
+        self.func = func
+        self.name = None
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        value = self.func(instance)
+        setattr(instance, self.name, value)
+        return value
 
 class LazyDescriptor:
 
@@ -109,5 +121,14 @@ def load_config(filename, source='default'):
     config.setdefault("URLS", [])
 
     mod.source = mod.sources[source]
-    mod.urls = Urls(mod.URLS)
+    urls = mod.urls = Urls(mod.URLS)
+
+    @responder
+    def application(environ, start_response):
+        with urls.bind_to_environ(environ):
+            return urls.dispatch(
+                lambda endpoint, values: mod.views[endpoint](mod, endpoint, values),
+                catch_http_exceptions=True)
+
+    mod.application = application
     return mod

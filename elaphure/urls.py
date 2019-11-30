@@ -53,3 +53,6 @@ class Urls:
 
     def dispatch(self, *args, **kwargs):
         return self.urls.get().dispatch(*args, **kwargs)
+
+    def current_url(self):
+        return self.dispatch(lambda e, v: self.build(e,v))

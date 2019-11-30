@@ -37,11 +37,6 @@ class FileSystemSource:
             for name in files:
                 yield os.path.relpath(os.path.join(root, name), self.basedir)
 
-    def _open(self, filename, mode='rb'):
-        f = self.open(filename, mode)
-        stat = os.stat(f.fileno())
-        return (f, datetime.utcfromtimestamp(stat.st_mtime), stat.st_size)
-
     def open(self, filename, mode='r'):
         return open(os.path.join(self.basedir, filename), mode)
 

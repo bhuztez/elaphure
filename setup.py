@@ -23,20 +23,17 @@ setup(
     author = 'bhuztez',
     author_email = 'bhuztez@gmail.com',
 
-    packages = ['elaphure', 'elaphure.registries', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
+    packages = ['elaphure', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
     entry_points={
         'elaphure_extensions':
         [ 'FileSystemSource = elaphure.sources.fs:FileSystemSource',
-          'WheezyView = elaphure.views.wheezy:WheezyView',
           'MarkdownReader = elaphure.readers.markdown:MarkdownReader',
+          'StaticFileView = elaphure.views.static:StaticFileView',
+          'EntryView = elaphure.views.entry:EntryView',
+          'EntryListView = elaphure.views.entry:EntryListView',
           'DryRunWriter = elaphure.writers.dry_run:DryRunWriter',
           'FileSystemWriter = elaphure.writers.fs:FileSystemWriter',
           'GitHubPagesWriter = elaphure.writers.gh_pages:GitHubPagesWriter',
-        ],
-        'elaphure_registries':
-        [ 'default = elaphure.registries.dummy:DummyRegistry',
-          'dummy = elaphure.registries.dummy:DummyRegistry',
-          'sqlite = elaphure.registries.sqlite:SqliteRegistry',
         ],
         'elaphure_sources':
         [ 'default = elaphure.sources.fs:FileSystemSource',
@@ -52,9 +49,8 @@ setup(
           'gh_pages = elaphure.writers.gh_pages:GitHubPagesWriter',
         ],
     },
-    install_requires = ['argh', 'Werkzeug', 'watchdog'],
+    install_requires = ['argh', 'Werkzeug', 'watchdog', 'wheezy.template'],
     extras_require = {
-        'wheezy.template': ['wheezy_template'],
         'markdown': ['Markdown'],
         'gh-pages': ['dulwich'],
     }
