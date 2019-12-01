@@ -9,7 +9,8 @@ from werkzeug.exceptions import NotFound
 
 from ..database import F, MultipleEntriesReturned
 
-extends_tokens.append('code')
+if 'code' not in extends_tokens:
+    extends_tokens.append('code')
 
 class AutoRequireExtension:
     def __init__(self, *names):
@@ -25,8 +26,8 @@ class AutoRequireExtension:
 engine = Engine(
     loader=FileLoader(['.']),
     extensions=[
-        CoreExtension(token_start='%'),
-        CodeExtension(token_start='%'),
+        CoreExtension(token_start='\\$'),
+        CodeExtension(token_start='\\$'),
         AutoRequireExtension('config', 'urls', 'db', 'endpoint', 'values'),
     ])
 
@@ -175,6 +176,12 @@ class BaseEntryView:
 
         return [dict(zip((self.page_kwarg,) + args, (page,) + row))
                 for row in db.execute(sql)]
+
+
+class RawEntryView(BaseEntryView):
+
+    def __call__(self, config, endpoint, values):
+        return Response(self.get(config.db, values).content, mimetype=self.mimetype)
 
 
 class EntryView(BaseEntryView):

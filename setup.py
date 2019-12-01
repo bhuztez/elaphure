@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'elaphure',
-    version = '0.0.4',
+    version = '0.0.5',
 
     url = 'https://github.com/bhuztez/elaphure',
     description = 'a static site generator',
@@ -23,12 +23,13 @@ setup(
     author = 'bhuztez',
     author_email = 'bhuztez@gmail.com',
 
-    packages = ['elaphure', 'elaphure.sources', 'elaphure.readers', 'elaphure.writers'],
+    packages = ['elaphure', 'elaphure.sources', 'elaphure.readers', 'elaphure.views', 'elaphure.writers'],
     entry_points={
         'elaphure_extensions':
         [ 'FileSystemSource = elaphure.sources.fs:FileSystemSource',
           'MarkdownReader = elaphure.readers.markdown:MarkdownReader',
           'StaticFileView = elaphure.views.static:StaticFileView',
+          'RawEntryView = elaphure.views.entry:RawEntryView',
           'EntryView = elaphure.views.entry:EntryView',
           'EntryListView = elaphure.views.entry:EntryListView',
           'DryRunWriter = elaphure.writers.dry_run:DryRunWriter',
@@ -41,6 +42,7 @@ setup(
         ],
         'elaphure_readers':
         [ 'markdown = elaphure.readers.markdown:MarkdownReader',
+          'wheezy = elaphure.readers.wheezy:WheezyReader',
         ],
         'elaphure_writers':
         [ 'default = elaphure.writers.dry_run:DryRunWriter',

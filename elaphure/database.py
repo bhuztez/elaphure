@@ -55,8 +55,7 @@ class Entry(Mapping):
 
     @cached_property
     def content(self):
-        with self.open() as f:
-            return self.reader.content(f)
+        return self.reader.content(self.source, self.filename)
 
 class F:
 

@@ -37,17 +37,20 @@ class MarkdownReader:
             tab_length=tab_length)
         self.attrs = attrs
 
-    def metadata(self, f):
+    def metadata(self, source, filename):
         md = self.md
         md.reset()
-        lines = list(metalines(f))
+        with source.open(filename) as f:
+            lines = list(metalines(f))
         lines = NormalizeWhitespace(md).run(lines)
         lines = MetaPreprocessor(md).run(lines)
         return md.Meta
 
-    def content(self, f):
+    def content(self, source, filename):
         md = self.md
         md.reset()
-        html=md.convert(f.read())
+        with source.open(filename) as f:
+            data = f.read()
+        html=md.convert(data)
         attrs = {a: getattr(md,a) for a in self.attrs}
         return Content(html, attrs)

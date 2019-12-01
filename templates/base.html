@@ -1,4 +1,4 @@
-%(
+$(
 is_home = urls.current_url() == urls.build('page', {'slug': 'index'})
 site_title = db.get(
 """
@@ -11,21 +11,21 @@ AND json_extract(source.metadata, '$.slug') = 'index'
 <!doctype html>
 <html>
 <head>
-%def title():
-%end
+$def title():
+$end
 <title>
-%if not is_home:
-%title() -
-%end
-%site_title</title>
-<link rel="stylesheet" href="%urls.build('static', {'path': 'base.css'})">
+$if not is_home:
+$title() -
+$end
+$site_title</title>
+<link rel="stylesheet" href="$urls.build('static', {'path': 'base.css'})">
 </head>
 <body>
 <main>
-<h1>%title()</h1>
-%def content():
-%end
-%content()
+<h1>$title()</h1>
+$def content():
+$end
+$content()
 </main>
 </body>
 </html>

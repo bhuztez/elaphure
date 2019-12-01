@@ -31,8 +31,7 @@ def add(config, filename):
     for pattern, reader_name, meta_func in config.SOURCE_FILES:
         if match(filename, pattern):
             reader = config.readers[reader_name]
-            with config.source.open(filename) as f:
-                data = reader.metadata(f)
+            data = reader.metadata(config.source, filename)
             config.db.add(filename, reader_name, meta_func(filename, data))
             return True
 

@@ -14,8 +14,8 @@ else:
 def find_all(config):
     urls = config.urls
     for rule in urls.iter_rules():
-        defaults = dict(rule.defaults) or {}
-        args = set(rule.arguments) or set()
+        defaults = dict(rule.defaults or {})
+        args = set(rule.arguments or ())
 
         for kwds in config.views[rule.endpoint].find_all(config, defaults, args):
             url = urls.build(rule.endpoint, kwds)
@@ -23,7 +23,7 @@ def find_all(config):
                 yield url
 
 
-def build(writer='default', config=configfile, source='default'):
+def build(writer='default', config=configfile, force=False, source='default'):
     from warnings import catch_warnings
     from werkzeug.test import Client
     from werkzeug.wrappers import BaseResponse
@@ -40,7 +40,7 @@ def build(writer='default', config=configfile, source='default'):
             for w in warnings:
                 print("{}: {}".format(w.category.__name__, w.message))
 
-            if warnings:
+            if not force and warnings:
                 quit(1)
 
 

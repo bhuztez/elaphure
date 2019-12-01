@@ -47,12 +47,12 @@ Elaphure uses [Wheezy Template](https://pythonhosted.org/wheezy.template/usergui
 
 Create a file named `article_list.html` with the following content
 
-    %require(entries)
+    $require(entries)
 
     <ul>
-    %for entry in entries:
-    <li>%entry["title"]</li>
-    %endfor
+    $for entry in entries:
+    <li>$entry["title"]</li>
+    $endfor
     </ul>
 
 Since no article had been created, open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) now, you will see an empty page.
@@ -94,11 +94,11 @@ As with `EntryListView`, when visiting [http://127.0.0.1:8000/foo.html](http://1
 
 Create a file named `article.html` with the following content
 
-    %require(entry)
+    $require(entry)
 
-    <h1>%entry["title"]</h1>
+    <h1>$entry["title"]</h1>
 
-    %entry.content
+    $entry.content
 
 open [http://127.0.0.1:8000/foo.html](http://127.0.0.1:8000/foo.html), you will see a page with following content:
 
@@ -109,12 +109,12 @@ open [http://127.0.0.1:8000/foo.html](http://127.0.0.1:8000/foo.html), you will 
 
 change the content of `article_list.html` to the following
 
-    %require(entries)
+    $require(entries)
 
     <ul>
-    %for entry in entries:
-    <li><a href="%urls.build('article', {'slug': entry['slug']})">%entry["title"]</a></li>
-    %endfor
+    $for entry in entries:
+    <li><a href="$urls.build('article', {'slug': entry['slug']})">$entry["title"]</a></li>
+    $endfor
     </ul>
 
 open [http://127.0.0.1:8000/](http://127.0.0.1:8000/), you will see a page with following content
